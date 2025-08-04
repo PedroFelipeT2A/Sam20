@@ -380,6 +380,9 @@ router.get('/stream/:videoId', authMiddleware, async (req, res) => {
         res.setHeader('Accept-Ranges', 'bytes');
         res.setHeader('Cache-Control', 'public, max-age=3600');
         res.setHeader('Content-Disposition', `inline; filename="${fileName}"`);
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+        res.setHeader('Access-Control-Allow-Headers', 'Range, Authorization');
         
         // Suporte a Range requests para seeking
         const range = req.headers.range;

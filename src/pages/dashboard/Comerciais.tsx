@@ -247,6 +247,11 @@ const Comerciais: React.FC = () => {
   const getVideoUrl = (url: string) => {
     if (!url) return '';
     
+    // Para vídeos SSH, usar URL diretamente
+    if (url.includes('/api/videos-ssh/')) {
+      return url;
+    }
+    
     if (url.startsWith('http')) {
       return url;
     }

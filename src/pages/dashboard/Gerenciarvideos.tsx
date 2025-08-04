@@ -1061,7 +1061,7 @@ export default function GerenciarVideos() {
                             abrirModalVideo({
                               id: Number(video.id),
                               nome: video.nome,
-                              url: buildHLSVideoUrl(video),
+                              url: `/api/videos-ssh/stream/${video.id}`,
                               duracao: video.duration,
                               tamanho: video.size
                             } as Video);

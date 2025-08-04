@@ -211,7 +211,14 @@ const Dashboard: React.FC = () => {
 
   const getCurrentVideo = () => {
     if (isPlayingPlaylist && playlistVideos.length > 0) {
-      return playlistVideos[currentVideoIndex]?.videos;
+      const currentItem = playlistVideos[currentVideoIndex];
+      if (currentItem?.videos) {
+        return {
+          ...currentItem.videos,
+          // Garantir que a URL está correta
+          url: currentItem.videos.url || ''
+        };
+      }
     }
     return undefined;
   };
