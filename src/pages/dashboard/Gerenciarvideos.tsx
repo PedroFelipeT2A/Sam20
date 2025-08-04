@@ -94,29 +94,11 @@ function ModalVideo({
   onFechar,
   videoAtual,
   playlist,
-  folderSelecionada,
-  sshVideos,
-  loadingSSH,
-  cacheStatus,
-  folderUsage,
-  loadingUsage,
-  onRefreshVideos,
-  onSyncFolder,
-  onClearCache,
 }: {
   aberto: boolean;
   onFechar: () => void;
   videoAtual?: Video | null;
   playlist?: Video[];
-  folderSelecionada: Folder | null;
-  sshVideos: SSHVideo[];
-  loadingSSH: boolean;
-  cacheStatus: CacheStatus | null;
-  folderUsage: FolderUsage | null;
-  loadingUsage: boolean;
-  onRefreshVideos: () => void;
-  onSyncFolder: () => void;
-  onClearCache: () => void;
 }) {
   const [indexAtual, setIndexAtual] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -201,181 +183,6 @@ function ModalVideo({
       <div className={`bg-black rounded-lg relative ${isFullscreen ? 'w-screen h-screen' : 'max-w-[85vw] max-h-[80vh] w-full'
         }`}>
         
-        {/* Painel de Controles Lateral */}
-        {!isFullscreen && (
-          <div className="absolute left-4 top-4 bottom-4 w-80 bg-white bg-opacity-95 rounded-lg p-4 overflow-y-auto z-20">
-            <div className="space-y-4">
-              {/* Título */}
-              <div className="border-b border-gray-200 pb-3">
-                <h3 className="text-lg font-semibold text-gray-900">Controles de Vídeo</h3>
-                <p className="text-sm text-gray-600">
-                  {folderSelecionada ? `Pasta: ${folderSelecionada.nome}` : 'Nenhuma pasta selecionada'}
-                </p>
-              </div>
-
-              {/* Controles de Cache e Sincronização */}
-              <div className="space-y-3">
-                <h4 className="text-sm font-medium text-gray-700">Gerenciamento</h4>
-                
-                <button
-                  onClick={onRefreshVideos}
-                  disabled={loadingSSH}
-                  className="w-full flex items-center justify-center space-x-2 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 text-sm"
-                >
-                  <RefreshCw className={`h-4 w-4 ${loadingSSH ? 'animate-spin' : ''}`} />
-                  <span>Atualizar Lista</span>
-                </button>
-                
-                {folderSelecionada && (
-                  <button
-                    onClick={onSyncFolder}
-                    className="w-full flex items-center justify-center space-x-2 px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm"
-                  >
-                    <Download className="h-4 w-4" />
-                    <span>Sincronizar</span>
-                  </button>
-                )}
-                
-                {cacheStatus && (
-                  <button
-                    onClick={onClearCache}
-                    className="w-full flex items-center justify-center space-x-2 px-3 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm"
-                  >
-                    <X className="h-4 w-4" />
-                    <span>Limpar Cache</span>
-                  </button>
-                )}
-              </div>
-
-              {/* Estatísticas de Uso da Pasta */}
-              {folderUsage && (
-                <div className="space-y-2">
-                  <h4 className="text-sm font-medium text-gray-700">Uso da Pasta</h4>
-                  <div className="bg-gray-50 p-3 rounded-md">
-                    <div className="grid grid-cols-2 gap-2 text-xs">
-                      <div>
-                        <span className="text-gray-500">Usado:</span>
-                        <div className="font-medium text-gray-900">
-                          {formatarTamanho(folderUsage.used * 1024 * 1024)}
-                        </div>
-                      </div>
-                      <div>
-                        <span className="text-gray-500">Total:</span>
-                        <div className="font-medium text-gray-900">
-                          {formatarTamanho(folderUsage.total * 1024 * 1024)}
-                        </div>
-                      </div>
-                      <div>
-                        <span className="text-gray-500">Disponível:</span>
-                        <div className="font-medium text-green-600">
-                          {formatarTamanho(folderUsage.available * 1024 * 1024)}
-                        </div>
-                      </div>
-                      <div>
-                        <span className="text-gray-500">Uso:</span>
-                        <div className={`font-medium ${
-                          folderUsage.percentage > 90 ? 'text-red-600' :
-                          folderUsage.percentage > 70 ? 'text-yellow-600' : 'text-green-600'
-                        }`}>
-                          {folderUsage.percentage}%
-                        </div>
-                      </div>
-                    </div>
-                    <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
-                      <div
-                        className={`h-2 rounded-full transition-all ${
-                          folderUsage.percentage > 90 ? 'bg-red-600' :
-                          folderUsage.percentage > 70 ? 'bg-yellow-600' : 'bg-green-600'
-                        }`}
-                        style={{ width: `${Math.min(folderUsage.percentage, 100)}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Status do Cache */}
-              {cacheStatus && (
-                <div className="space-y-2">
-                  <h4 className="text-sm font-medium text-gray-700">Cache SSH</h4>
-                  <div className="bg-gray-50 p-3 rounded-md">
-                    <div className="text-xs space-y-1">
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">Arquivos:</span>
-                        <span className="font-medium">{cacheStatus.totalFiles}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">Uso:</span>
-                        <span className="font-medium">{Math.round(cacheStatus.usagePercentage)}%</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">Tamanho:</span>
-                        <span className="font-medium">{formatarTamanho(cacheStatus.totalSize)}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Lista de Vídeos da Pasta */}
-              <div className="space-y-2">
-                <h4 className="text-sm font-medium text-gray-700">
-                  Vídeos ({sshVideos.length})
-                </h4>
-                <div className="max-h-40 overflow-y-auto space-y-1">
-                  {loadingSSH ? (
-                    <div className="flex items-center justify-center py-4">
-                      <RefreshCw className="h-4 w-4 animate-spin text-blue-600 mr-2" />
-                      <span className="text-sm text-gray-600">Carregando...</span>
-                    </div>
-                  ) : sshVideos.length === 0 ? (
-                    <p className="text-xs text-gray-500 text-center py-4">
-                      Nenhum vídeo encontrado
-                    </p>
-                  ) : (
-                    sshVideos.map((video) => (
-                      <div
-                        key={video.id}
-                        className="flex items-center justify-between p-2 bg-gray-50 rounded text-xs hover:bg-gray-100"
-                      >
-                        <div className="flex-1 min-w-0">
-                          <div className="truncate font-medium">{video.nome}</div>
-                          <div className="text-gray-500">
-                            {formatarTamanho(video.size)} • {formatarDuracao(video.duration)}
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => {
-                            // Trocar para este vídeo no player
-                            const videoForPlayer = {
-                              id: Number(video.id),
-                              nome: video.nome,
-                              url: `/api/videos-ssh/stream/${video.id}`,
-                              duracao: video.duration,
-                              tamanho: video.size
-                            };
-                            // Aqui você pode implementar a lógica para trocar o vídeo
-                          }}
-                          className="text-blue-600 hover:text-blue-800 p-1"
-                          title="Reproduzir este vídeo"
-                        >
-                          <Play className="h-3 w-3" />
-                        </button>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-
-              {/* Informações do Sistema */}
-              <div className="text-xs text-gray-500 space-y-1 pt-2 border-t border-gray-200">
-                <p><strong>Modo SSH:</strong> Vídeos acessados diretamente do servidor</p>
-                <p><strong>Cache:</strong> Primeira reprodução pode ser mais lenta</p>
-                <p><strong>Qualidade:</strong> Melhor qualidade e confiabilidade</p>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Controles do Modal */}
         <div className="absolute top-4 right-4 z-30 flex items-center space-x-2">
@@ -405,7 +212,7 @@ function ModalVideo({
         </div>
 
         {video ? (
-          <div className={`w-full h-full ${isFullscreen ? 'p-0' : 'p-8 pt-20 pl-96'}`}>
+          <div className={`w-full h-full ${isFullscreen ? 'p-0' : 'p-8 pt-20'}`}>
             <UniversalVideoPlayer
               src={buildVideoUrl(video.url || '')}
               title={video.nome}
@@ -966,17 +773,9 @@ export default function GerenciarVideos() {
   };
 
   const openVideoInNewTab = (video: SSHVideo) => {
-    const isProduction = window.location.hostname !== 'localhost';
-    const wowzaHost = isProduction ? 'samhost.wcore.com.br' : '51.222.156.223';
-    const userLogin = video.userLogin;
-    
-    const directUrl = `http://${wowzaHost}:6980/content/${userLogin}/${video.folder}/${video.nome}`;
-    
-    const newWindow = window.open(directUrl, '_blank');
-    
-    if (!newWindow) {
-      window.open(`/content/${userLogin}/${video.folder}/${video.nome}`, '_blank');
-    }
+    // Abrir vídeo SSH em nova aba usando a URL do stream
+    const streamUrl = `/api/videos-ssh/stream/${video.id}`;
+    window.open(streamUrl, '_blank');
   };
 
   const checkVideoIntegrity = async (video: SSHVideo) => {
@@ -1336,15 +1135,6 @@ export default function GerenciarVideos() {
         onFechar={() => setModalAberta(false)}
         videoAtual={videoModalAtual}
         playlist={playlistModal ?? undefined}
-        folderSelecionada={folderSelecionada}
-        sshVideos={sshVideos}
-        loadingSSH={loadingSSH}
-        cacheStatus={cacheStatus}
-        folderUsage={folderUsage}
-        loadingUsage={loadingUsage}
-        onRefreshVideos={() => folderSelecionada && fetchSSHVideos(folderSelecionada.nome)}
-        onSyncFolder={syncFolderWithServer}
-        onClearCache={clearCache}
       />
 
       {/* Modal de confirmação */}

@@ -102,6 +102,11 @@ const UniversalVideoPlayer: React.FC<UniversalVideoPlayerProps> = ({
 
   // Função para detectar tipo de arquivo
   const getFileType = (url: string) => {
+    // Para URLs SSH, sempre tratar como vídeo regular
+    if (url.includes('/api/videos-ssh/')) {
+      return 'video';
+    }
+    
     const extension = url.split('.').pop()?.toLowerCase();
 
     switch (extension) {
@@ -120,7 +125,7 @@ const UniversalVideoPlayer: React.FC<UniversalVideoPlayerProps> = ({
       case 'mkv':
         return 'video';
       default:
-        return 'unknown';
+        return 'video'; // Default para vídeo em vez de unknown
     }
   };
 
@@ -305,6 +310,13 @@ const UniversalVideoPlayer: React.FC<UniversalVideoPlayerProps> = ({
           debug: false,
           xhrSetup: (xhr, url) => {
             xhr.withCredentials = false;
+            // Adicionar token de autenticação para URLs SSH
+            if (src && src.includes('/api/videos-ssh/')) {
+              const token = localStorage.getItem('auth_token');
+              if (token) {
+                xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+              }
+            }
             xhr.timeout = src.includes('/api/videos-ssh/') ? 30000 : 10000; // Mais tempo para SSH
           }
         });
@@ -317,7 +329,12 @@ const UniversalVideoPlayer: React.FC<UniversalVideoPlayerProps> = ({
           setIsLoading(false);
           setConnectionStatus('connected');
           if (autoplay) {
-            video.play().catch(console.error);
+            // Delay para evitar conflitos
+            setTimeout(() => {
+              video.play().catch(error => {
+                console.warn('Autoplay falhou (normal):', error);
+              });
+            }, 100);
           }
         });
 
@@ -333,6 +350,8 @@ const UniversalVideoPlayer: React.FC<UniversalVideoPlayerProps> = ({
                 errorMsg = 'Vídeo não encontrado no servidor. Tente atualizar a lista.';
               } else if (data.details?.includes('timeout')) {
                 errorMsg = 'Timeout ao baixar vídeo do servidor. Tente novamente.';
+              } else if (data.details?.includes('401')) {
+                errorMsg = 'Erro de autenticação. Faça login novamente.';
               } else {
                 errorMsg = 'Erro ao acessar vídeo do servidor via SSH';
               }
@@ -349,7 +368,11 @@ const UniversalVideoPlayer: React.FC<UniversalVideoPlayerProps> = ({
         console.log('🍎 Usando Safari nativo para HLS');
         video.src = videoUrl;
         if (autoplay) {
-          video.play().catch(console.error);
+          setTimeout(() => {
+            video.play().catch(error => {
+              console.warn('Autoplay falhou (normal):', error);
+            });
+          }, 100);
         }
       } else {
         setError('HLS não suportado neste navegador');
@@ -357,7 +380,7 @@ const UniversalVideoPlayer: React.FC<UniversalVideoPlayerProps> = ({
       }
     } else {
       // Vídeo regular (MP4, WebM, etc.)
-      console.log(`📹 Carregando vídeo ${fileType.toUpperCase()}`);
+      console.log(`📹 Carregando vídeo ${fileType.toUpperCase()}${src.includes('/api/videos-ssh/') ? ' (SSH)' : ''}`);
 
       // Para vídeos SSH, configurar timeout maior
       if (src && src.includes('/api/videos-ssh/')) {
@@ -382,6 +405,9 @@ const UniversalVideoPlayer: React.FC<UniversalVideoPlayerProps> = ({
         case 'ogg':
           source.type = 'video/ogg';
           break;
+        case 'video':
+          source.type = 'video/mp4'; // Default para vídeos SSH
+          break;
         default:
           source.type = 'video/mp4'; // Fallback
       }
@@ -399,10 +425,11 @@ const UniversalVideoPlayer: React.FC<UniversalVideoPlayerProps> = ({
       video.load();
 
       if (autoplay) {
-        video.play().catch(error => {
-          console.warn('Autoplay falhou:', error);
-          // Autoplay pode falhar por políticas do navegador
-        });
+        setTimeout(() => {
+          video.play().catch(error => {
+            console.warn('Autoplay falhou (normal):', error);
+          });
+        }, 100);
       }
     }
 

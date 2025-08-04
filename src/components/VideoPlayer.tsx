@@ -69,24 +69,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ playlistVideo, onVideoEnd }) 
     return `/content/${cleanPath}`;
   };
 
-  // Função para construir URL HLS/M3U8 para vídeos
-  const buildHLSUrl = (video: any) => {
-    if (!video) return '';
-    
-    const userLogin = user?.email?.split('@')[0] || `user_${user?.id || 'usuario'}`;
-    
-    // Se é um vídeo SSH, usar URL direta do servidor
-    if (video.url && video.url.includes('/api/videos-ssh/')) {
-      return video.url;
-    }
-    
-    // Para vídeos normais, usar URL direta do proxy
-    if (video.url) {
-      return buildVideoUrl(video.url);
-    }
-    
-    return '';
-  };
+  
   const videoSrc = playlistVideo?.url ? buildVideoUrl(playlistVideo.url) : 
     (streamData.isLive ? `http://samhost.wcore.com.br:1935/samhost/${userLogin}_live/playlist.m3u8` : 
      obsStreamActive ? obsStreamUrl : undefined);

@@ -98,20 +98,7 @@ const Playlists: React.FC = () => {
     return `/content/${cleanPath}`;
   };
 
-  // Função para construir URL HLS para vídeos VOD
-  const buildHLSVideoUrl = (video: Video) => {
-    const { user } = useAuth();
-    
-    if (!video.url) return '';
-    
-    // Para vídeos SSH, usar URL direta
-    if (video.url.includes('/api/videos-ssh/')) {
-      return video.url;
-    }
-    
-    // Para vídeos normais, usar URL direta do proxy
-    return buildVideoUrl(video.url);
-  };
+  
   const carregarPlaylists = async () => {
     try {
       setStatus(null);
@@ -446,7 +433,7 @@ const Playlists: React.FC = () => {
           onClick={(e) => {
             e.stopPropagation();
             // Abrir modal do player
-            setCurrentVideoUrl(buildHLSVideoUrl(video));
+            setCurrentVideoUrl(buildVideoUrl(video.url || ''));
             setPlaylistVideosToPlay([video]);
             setPlaylistPlayerIndex(0);
             setVideoPlayerModalOpen(true);
@@ -553,7 +540,7 @@ const Playlists: React.FC = () => {
       
       setPlaylistVideosToPlay(videos);
       setPlaylistPlayerIndex(0);
-      setCurrentVideoUrl(buildHLSVideoUrl(videos[0]));
+      setCurrentVideoUrl(buildVideoUrl(videos[0].url || ''));
       setVideoPlayerModalOpen(true);
     } catch (error) {
       console.error('Erro ao carregar playlist:', error);
@@ -565,11 +552,11 @@ const Playlists: React.FC = () => {
     if (playlistPlayerIndex < playlistVideosToPlay.length - 1) {
       const nextIndex = playlistPlayerIndex + 1;
       setPlaylistPlayerIndex(nextIndex);
-      setCurrentVideoUrl(buildHLSVideoUrl(playlistVideosToPlay[nextIndex]));
+      setCurrentVideoUrl(buildVideoUrl(playlistVideosToPlay[nextIndex].url || ''));
     } else {
       // Repetir playlist do início
       setPlaylistPlayerIndex(0);
-      setCurrentVideoUrl(buildHLSVideoUrl(playlistVideosToPlay[0]));
+      setCurrentVideoUrl(buildVideoUrl(playlistVideosToPlay[0].url || ''));
     }
   };
 
@@ -577,7 +564,7 @@ const Playlists: React.FC = () => {
     if (playlistPlayerIndex > 0) {
       const prevIndex = playlistPlayerIndex - 1;
       setPlaylistPlayerIndex(prevIndex);
-      setCurrentVideoUrl(buildHLSVideoUrl(playlistVideosToPlay[prevIndex]));
+      setCurrentVideoUrl(buildVideoUrl(playlistVideosToPlay[prevIndex].url || ''));
     }
   };
 
@@ -585,7 +572,7 @@ const Playlists: React.FC = () => {
     if (playlistPlayerIndex < playlistVideosToPlay.length - 1) {
       const nextIndex = playlistPlayerIndex + 1;
       setPlaylistPlayerIndex(nextIndex);
-      setCurrentVideoUrl(buildHLSVideoUrl(playlistVideosToPlay[nextIndex]));
+      setCurrentVideoUrl(buildVideoUrl(playlistVideosToPlay[nextIndex].url || ''));
     }
   };
 
