@@ -80,32 +80,19 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ playlistVideo, onVideoEnd }) 
       return video.url;
     }
     
-    // Para vídeos normais, construir URL HLS do Wowza
+    // Para vídeos normais, usar URL direta do proxy
     if (video.url) {
-      const cleanPath = video.url.replace(/^\/+/, '');
-      const pathParts = cleanPath.split('/');
-      
-      if (pathParts.length >= 3) {
-        const [userPath, folder, filename] = pathParts;
-        const nameWithoutExt = filename.replace(/\.[^/.]+$/, '');
-        
-        // URL HLS do Wowza para VOD
-        const isProduction = window.location.hostname !== 'localhost';
-        const wowzaHost = isProduction ? 'samhost.wcore.com.br' : '51.222.156.223';
-        
-        return `http://${wowzaHost}:1935/vod/${userPath}/${folder}/${nameWithoutExt}/playlist.m3u8`;
-      }
+      return buildVideoUrl(video.url);
     }
     
-    // Fallback para URL original
-    return buildVideoUrl(video.url || '');
+    return '';
   };
   const videoSrc = playlistVideo?.url ? buildVideoUrl(playlistVideo.url) : 
     (streamData.isLive ? `http://samhost.wcore.com.br:1935/samhost/${userLogin}_live/playlist.m3u8` : 
      obsStreamActive ? obsStreamUrl : undefined);
 
-  // Usar URL HLS se disponível para melhor compatibilidade
-  const hlsVideoSrc = playlistVideo ? buildHLSUrl(playlistVideo) : videoSrc;
+  // Para vídeos de playlist, usar URL direta
+  const finalVideoSrc = playlistVideo ? buildVideoUrl(playlistVideo.url || '') : videoSrc;
   const videoTitle = playlistVideo?.nome || 
     (streamData.isLive ? streamData.title || 'Transmissão ao Vivo' : 
      obsStreamActive ? 'Transmissão OBS ao Vivo' : undefined);
@@ -114,7 +101,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ playlistVideo, onVideoEnd }) 
 
   return (
     <UniversalVideoPlayer
-      src={hlsVideoSrc}
+      src={finalVideoSrc}
       title={videoTitle}
       isLive={isLive}
       autoplay={!!playlistVideo}

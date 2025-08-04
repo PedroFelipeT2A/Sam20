@@ -141,30 +141,14 @@ const Dashboard: React.FC = () => {
       const processedVideos = data.map((item: any) => {
         const video = item.videos;
         
-        // Construir URL HLS para melhor compatibilidade
-        let hlsUrl = video.url;
-        
-        if (video.url && !video.url.includes('/api/videos-ssh/') && !video.url.startsWith('http')) {
-          const cleanPath = video.url.replace(/^\/+/, '');
-          const pathParts = cleanPath.split('/');
-          
-          if (pathParts.length >= 3) {
-            const [userPath, folder, filename] = pathParts;
-            const nameWithoutExt = filename.replace(/\.[^/.]+$/, '');
-            
-            // URL HLS do Wowza para VOD
-            const isProduction = window.location.hostname !== 'localhost';
-            const wowzaHost = isProduction ? 'samhost.wcore.com.br' : '51.222.156.223';
-            
-            hlsUrl = `http://${wowzaHost}:1935/vod/${userPath}/${folder}/${nameWithoutExt}/playlist.m3u8`;
-          }
-        }
+        // Usar URL direta do vídeo
+        let videoUrl = video.url;
         
         return {
           ...item,
           videos: {
             ...video,
-            url: hlsUrl
+            url: videoUrl
           }
         };
       });

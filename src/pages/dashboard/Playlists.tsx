@@ -101,7 +101,6 @@ const Playlists: React.FC = () => {
   // Função para construir URL HLS para vídeos VOD
   const buildHLSVideoUrl = (video: Video) => {
     const { user } = useAuth();
-    const userLogin = user?.email?.split('@')[0] || `user_${user?.id || 'usuario'}`;
     
     if (!video.url) return '';
     
@@ -110,22 +109,7 @@ const Playlists: React.FC = () => {
       return video.url;
     }
     
-    // Para vídeos normais, tentar construir URL HLS
-    const cleanPath = video.url.replace(/^\/+/, '');
-    const pathParts = cleanPath.split('/');
-    
-    if (pathParts.length >= 3) {
-      const [userPath, folder, filename] = pathParts;
-      const nameWithoutExt = filename.replace(/\.[^/.]+$/, '');
-      
-      // URL HLS do Wowza para VOD
-      const isProduction = window.location.hostname !== 'localhost';
-      const wowzaHost = isProduction ? 'samhost.wcore.com.br' : '51.222.156.223';
-      
-      return `http://${wowzaHost}:1935/vod/${userPath}/${folder}/${nameWithoutExt}/playlist.m3u8`;
-    }
-    
-    // Fallback para URL original
+    // Para vídeos normais, usar URL direta do proxy
     return buildVideoUrl(video.url);
   };
   const carregarPlaylists = async () => {
@@ -653,7 +637,7 @@ const Playlists: React.FC = () => {
   }
 
   return (
-    <div className="p-6 w-full h-full min-h-screen bg-white">
+    <div className="p-4 sm:p-6 w-full h-full min-h-screen bg-white max-w-full overflow-x-hidden">
       <header className="flex flex-col sm:flex-row items-center justify-between mb-6 gap-4">
         <h1 className="text-3xl font-extrabold text-gray-900">Playlists</h1>
 
@@ -667,19 +651,19 @@ const Playlists: React.FC = () => {
       </header>
 
       <div className="overflow-x-auto rounded-lg border border-gray-300 shadow-sm bg-white">
-        <table className="w-full min-w-[600px] border-collapse bg-white">
+        <table className="w-full min-w-[500px] sm:min-w-[600px] border-collapse bg-white">
           <thead className="bg-blue-50">
             <tr>
               <th className="text-left p-4 font-semibold text-blue-800 border-b border-blue-100">Nome</th>
-              <th className="text-center p-4 font-semibold text-blue-800 border-b border-blue-100 w-28">Qtd. Vídeos</th>
-              <th className="text-center p-4 font-semibold text-blue-800 border-b border-blue-100 w-36">Duração Total</th>
-              <th className="text-center p-4 font-semibold text-blue-800 border-b border-blue-100 w-40">Ações</th>
+              <th className="text-center p-2 sm:p-4 font-semibold text-blue-800 border-b border-blue-100 w-20 sm:w-28">Qtd. Vídeos</th>
+              <th className="text-center p-2 sm:p-4 font-semibold text-blue-800 border-b border-blue-100 w-24 sm:w-36 hidden sm:table-cell">Duração Total</th>
+              <th className="text-center p-2 sm:p-4 font-semibold text-blue-800 border-b border-blue-100 w-24 sm:w-40">Ações</th>
             </tr>
           </thead>
           <tbody>
             {playlists.length === 0 && (
               <tr>
-                <td colSpan={4} className="text-center text-gray-500 p-6">
+                <td colSpan={4} className="text-center text-gray-500 p-4 sm:p-6 text-sm">
                   Nenhuma playlist criada
                 </td>
               </tr>
@@ -689,32 +673,32 @@ const Playlists: React.FC = () => {
                 key={playlist.id}
                 className="cursor-pointer transition-colors duration-150 hover:bg-blue-100"
               >
-                <td className="p-4 max-w-xs truncate">{playlist.nome}</td>
-                <td className="p-4 text-center">{playlist.quantidadeVideos ?? 0}</td>
-                <td className="p-4 text-center">
+                <td className="p-2 sm:p-4 max-w-[150px] sm:max-w-xs truncate text-sm sm:text-base">{playlist.nome}</td>
+                <td className="p-2 sm:p-4 text-center text-sm sm:text-base">{playlist.quantidadeVideos ?? 0}</td>
+                <td className="p-2 sm:p-4 text-center text-sm sm:text-base hidden sm:table-cell">
                   {playlist.duracaoTotal ? formatarDuracao(playlist.duracaoTotal) : '00:00:00'}
                 </td>
-                <td className="p-4 flex justify-center gap-4 text-blue-600">
+                <td className="p-2 sm:p-4 flex justify-center gap-2 sm:gap-4 text-blue-600">
                   <button
                     title="Abrir player"
                     onClick={() => abrirPlayerPlaylist(playlist.id)}
                     className="hover:text-blue-800 transition"
                   >
-                    <Play size={18} />
+                    <Play size={16} />
                   </button>
                   <button
                     title="Editar"
                     onClick={() => abrirModal(playlist)}
                     className="hover:text-blue-800 transition"
                   >
-                    <Edit2 size={18} />
+                    <Edit2 size={16} />
                   </button>
                   <button
                     title="Deletar"
                     onClick={() => confirmarDeletarPlaylist(playlist)}
                     className="text-red-600 hover:text-red-800 transition"
                   >
-                    <Trash2 size={18} />
+                    <Trash2 size={16} />
                   </button>
                 </td>
               </tr>
@@ -724,8 +708,8 @@ const Playlists: React.FC = () => {
       </div>
 
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 p-4 overflow-auto">
-          <div className="bg-white rounded-xl p-8 max-w-[90vw] max-h-[90vh] w-full overflow-auto shadow-2xl border border-gray-300">
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 p-2 sm:p-4 overflow-auto">
+          <div className="bg-white rounded-xl p-4 sm:p-8 max-w-[95vw] sm:max-w-[90vw] max-h-[95vh] sm:max-h-[90vh] w-full overflow-auto shadow-2xl border border-gray-300">
             <form onSubmit={salvarPlaylist} className="h-full flex flex-col">
               <div className="mb-6">
                 <label htmlFor="nome" className="block mb-2 font-semibold text-gray-800 text-lg">
@@ -741,9 +725,9 @@ const Playlists: React.FC = () => {
                 />
               </div>
 
-              <div className="mb-6 flex gap-6 flex-grow overflow-hidden">
+              <div className="mb-6 flex flex-col lg:flex-row gap-4 lg:gap-6 flex-grow overflow-hidden">
                 {/* Lista de pastas e vídeos disponíveis */}
-                <div className="flex-1 max-h-full overflow-y-auto border border-gray-300 rounded-md p-3 bg-gray-50">
+                <div className="w-full lg:flex-1 max-h-[300px] lg:max-h-full overflow-y-auto border border-gray-300 rounded-md p-3 bg-gray-50">
                   <h2 className="font-semibold mb-3 text-gray-900 text-lg">Pastas e vídeos disponíveis</h2>
                   {folders.map((folder) => (
                     <div key={folder.id} className="mb-3">
@@ -757,7 +741,7 @@ const Playlists: React.FC = () => {
                           ) : (
                             <ChevronRight size={20} className="text-blue-600" />
                           )}
-                          <span className="font-semibold text-gray-900 text-lg">{folder.nome}</span>
+                          <span className="font-semibold text-gray-900 text-sm sm:text-lg truncate">{folder.nome}</span>
                         </div>
                         <button
                           type="button"
@@ -768,7 +752,7 @@ const Playlists: React.FC = () => {
                           className="text-blue-600 hover:text-blue-800 transition-colors duration-200"
                           title="Adicionar todos da pasta"
                         >
-                          <PlusCircle size={22} />
+                          <PlusCircle size={18} />
                         </button>
                       </div>
 
@@ -791,7 +775,7 @@ const Playlists: React.FC = () => {
                 </div>
 
                 {/* Lista de vídeos selecionados na playlist */}
-                <div className="flex-1 max-h-full overflow-y-auto border border-gray-300 rounded-md p-3 flex flex-col bg-gray-50">
+                <div className="w-full lg:flex-1 max-h-[300px] lg:max-h-full overflow-y-auto border border-gray-300 rounded-md p-3 flex flex-col bg-gray-50">
                   <h2 className="font-semibold mb-3 flex justify-between items-center text-gray-900 text-lg">
                     Vídeos na playlist
                     <button
@@ -821,18 +805,18 @@ const Playlists: React.FC = () => {
 
               {status && <p className="mb-4 text-red-600 font-semibold">{status}</p>}
 
-              <div className="flex justify-end gap-3 mt-auto">
+              <div className="flex flex-col sm:flex-row justify-end gap-3 mt-auto">
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-5 py-2 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors duration-200 disabled:opacity-50"
+                  className="w-full sm:w-auto px-5 py-2 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors duration-200 disabled:opacity-50"
                   disabled={loading}
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200 disabled:opacity-50"
+                  className="w-full sm:w-auto px-5 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200 disabled:opacity-50"
                   disabled={loading}
                 >
                   {loading ? 'Salvando...' : 'Salvar'}
@@ -853,7 +837,9 @@ const Playlists: React.FC = () => {
             }
           }}
         >
-          <div className="bg-black rounded-lg max-w-[85vw] max-h-[80vh] w-full relative">
+          <div className={`bg-black rounded-lg relative ${
+            isFullscreen ? 'w-screen h-screen' : 'max-w-[95vw] sm:max-w-[85vw] max-h-[90vh] sm:max-h-[80vh] w-full'
+          }`}>
             {/* Controles do Modal */}
             <div className="absolute top-4 right-4 z-20 flex items-center space-x-2">
               <button
@@ -875,7 +861,9 @@ const Playlists: React.FC = () => {
 
             {/* Título do Vídeo */}
             <div className="absolute top-4 left-4 z-20 bg-black bg-opacity-60 text-white px-4 py-2 rounded-lg">
-              <h3 className="font-medium">{playlistVideosToPlay[playlistPlayerIndex]?.nome || 'Playlist'}</h3>
+              <h3 className="font-medium text-sm sm:text-base truncate max-w-[200px] sm:max-w-none">
+                {playlistVideosToPlay[playlistPlayerIndex]?.nome || 'Playlist'}
+              </h3>
               <p className="text-xs opacity-80">
                 {playlistPlayerIndex + 1} de {playlistVideosToPlay.length}
               </p>
@@ -899,21 +887,21 @@ const Playlists: React.FC = () => {
 
             {/* Controles da playlist */}
             {playlistVideosToPlay.length > 1 && (
-              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-80 text-white px-6 py-3 rounded-lg shadow-lg">
+              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-80 text-white px-3 sm:px-6 py-2 sm:py-3 rounded-lg shadow-lg max-w-[90vw]">
                 <div className="flex items-center justify-between space-x-6">
                   <button
                     disabled={playlistPlayerIndex === 0}
                     onClick={goToPreviousVideo}
-                    className="px-4 py-2 bg-gray-700 rounded disabled:opacity-50 hover:bg-gray-600 transition-colors duration-200 text-sm font-medium"
+                    className="px-2 sm:px-4 py-1 sm:py-2 bg-gray-700 rounded disabled:opacity-50 hover:bg-gray-600 transition-colors duration-200 text-xs sm:text-sm font-medium"
                   >
                     ← Anterior
                   </button>
 
                   <div className="text-center">
-                    <div className="text-sm font-medium">
+                    <div className="text-xs sm:text-sm font-medium">
                       {playlistPlayerIndex + 1} / {playlistVideosToPlay.length}
                     </div>
-                    <div className="text-xs text-gray-300 max-w-48 truncate">
+                    <div className="text-xs text-gray-300 max-w-[100px] sm:max-w-48 truncate">
                       {playlistVideosToPlay[playlistPlayerIndex]?.nome}
                     </div>
                   </div>
@@ -921,7 +909,7 @@ const Playlists: React.FC = () => {
                   <button
                     disabled={playlistPlayerIndex === playlistVideosToPlay.length - 1}
                     onClick={goToNextVideo}
-                    className="px-4 py-2 bg-gray-700 rounded disabled:opacity-50 hover:bg-gray-600 transition-colors duration-200 text-sm font-medium"
+                    className="px-2 sm:px-4 py-1 sm:py-2 bg-gray-700 rounded disabled:opacity-50 hover:bg-gray-600 transition-colors duration-200 text-xs sm:text-sm font-medium"
                   >
                     Próximo →
                   </button>

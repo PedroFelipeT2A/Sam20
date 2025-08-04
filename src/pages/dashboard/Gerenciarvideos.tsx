@@ -753,46 +753,17 @@ export default function GerenciarVideos() {
     setEditingVideo(null);
   };
 
-  // Função para construir URL HLS para vídeos VOD
-  const buildHLSVideoUrl = (video: Video | SSHVideo) => {
-    const userLogin = user?.email?.split('@')[0] || `user_${user?.id || 'usuario'}`;
-    
-    // Para vídeos SSH, usar URL direta
-    if ('id' in video && typeof video.id === 'string') {
-      return `/api/videos-ssh/stream/${video.id}`;
-    }
-    
-    // Para vídeos normais, tentar construir URL HLS
-    if (video.url) {
-      const cleanPath = video.url.replace(/^\/+/, '');
-      const pathParts = cleanPath.split('/');
-      
-      if (pathParts.length >= 3) {
-        const [userPath, folder, filename] = pathParts;
-        const nameWithoutExt = filename.replace(/\.[^/.]+$/, '');
-        
-        // URL HLS do Wowza para VOD
-        const isProduction = window.location.hostname !== 'localhost';
-        const wowzaHost = isProduction ? 'samhost.wcore.com.br' : '51.222.156.223';
-        
-        return `http://${wowzaHost}:1935/vod/${userPath}/${folder}/${nameWithoutExt}/playlist.m3u8`;
-      }
-    }
-    
-    // Fallback para URL original
-    return buildVideoUrl(video.url || '');
-  };
 
   const abrirModalVideo = (video: Video) => {
     console.log('Abrindo modal para vídeo:', video);
     
-    // Usar URL HLS para melhor compatibilidade
-    const videoWithHLS = {
+    // Usar URL direta para melhor compatibilidade
+    const videoWithUrl = {
       ...video,
-      url: buildHLSVideoUrl(video)
+      url: buildVideoUrl(video.url || '')
     };
     
-    setVideoModalAtual(videoWithHLS);
+    setVideoModalAtual(videoWithUrl);
     setPlaylistModal(null);
     setModalAberta(true);
   };
@@ -803,7 +774,7 @@ export default function GerenciarVideos() {
     const videosParaPlaylist = sshVideos.map(v => ({
       id: 0,
       nome: v.nome,
-      url: buildHLSVideoUrl(v),
+      url: `/api/videos-ssh/stream/${v.id}`,
       duracao: v.duration,
       tamanho: v.size
     }));
@@ -856,7 +827,7 @@ export default function GerenciarVideos() {
   };
   return (
     <>
-      <div className="max-w-7xl mx-auto p-6 flex flex-col md:flex-row gap-8 min-h-[700px]">
+      <div className="w-full max-w-full p-4 sm:p-6 flex flex-col lg:flex-row gap-6 min-h-[700px] overflow-x-hidden">
         {/* Controles de Cache */}
         <div className="w-full mb-4">
           <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
@@ -883,7 +854,7 @@ export default function GerenciarVideos() {
               </div>
               
               {cacheStatus && (
-                <div className="flex items-center space-x-4 text-sm">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 text-sm">
                   <div className="flex items-center space-x-2">
                     <HardDrive className="h-4 w-4 text-gray-500" />
                     <span className="text-gray-600">
@@ -912,7 +883,7 @@ export default function GerenciarVideos() {
                     <RefreshCw className="h-4 w-4 animate-spin text-gray-500" />
                   )}
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 text-sm">
                   <div>
                     <span className="text-gray-500">Usado:</span>
                     <span className="ml-2 font-medium text-gray-900">
@@ -969,11 +940,11 @@ export default function GerenciarVideos() {
         </div>
 
         {/* Seção das Pastas */}
-        <section className="md:w-1/3 bg-gray-50 p-6 rounded-lg shadow-md flex flex-col min-h-[500px] border border-gray-300">
+        <section className="w-full lg:w-1/3 bg-gray-50 p-4 sm:p-6 rounded-lg shadow-md flex flex-col min-h-[500px] border border-gray-300">
           <h2 className="text-2xl font-semibold mb-5 text-gray-900 flex justify-between items-center">
             Pastas
           </h2>
-          <ul className="flex-grow overflow-auto max-h-[450px] space-y-2">
+          <ul className="flex-grow overflow-auto max-h-[300px] sm:max-h-[450px] space-y-2">
             {folders.map((folder) => (
               <li
                 key={folder.id}
@@ -984,7 +955,7 @@ export default function GerenciarVideos() {
                 onClick={() => setFolderSelecionada(folder)}
                 title={`Selecionar pasta ${folder.nome}`}
               >
-                <span>{folder.nome}</span>
+                <span className="truncate flex-1 mr-2">{folder.nome}</span>
                 <div className="flex items-center gap-2">
                   {/* Ícone para assistir a pasta (playlist da pasta) */}
                   <button
@@ -996,7 +967,7 @@ export default function GerenciarVideos() {
                     className="text-blue-600 hover:text-blue-800 transition-colors duration-200"
                     disabled={sshVideos.length === 0}
                   >
-                    <Play size={20} />
+                    <Play size={16} />
                   </button>
 
                   {/* Botão para abrir vídeo em nova aba (baseado no PHP) */}
@@ -1030,17 +1001,17 @@ export default function GerenciarVideos() {
             ))}
           </ul>
           {/* Input para criar pasta */}
-          <div className="mt-4 flex gap-2 max-w-full">
+          <div className="mt-4 flex flex-col sm:flex-row gap-2 max-w-full">
             <input
               type="text"
               value={novoFolderNome}
               onChange={(e) => setNovoFolderNome(e.target.value)}
-              className="flex-grow min-w-0 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="w-full sm:flex-grow min-w-0 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
               placeholder="Nova pasta"
             />
             <button
               onClick={criarFolder}
-              className="bg-blue-600 text-white px-5 rounded hover:bg-blue-700 whitespace-nowrap transition-colors duration-200"
+              className="w-full sm:w-auto bg-blue-600 text-white px-5 py-2 rounded hover:bg-blue-700 whitespace-nowrap transition-colors duration-200"
             >
               Criar
             </button>
@@ -1048,7 +1019,7 @@ export default function GerenciarVideos() {
         </section>
 
         {/* Seção dos Vídeos */}
-        <section className="md:w-2/3 bg-gray-50 p-6 rounded-lg shadow-md flex flex-col min-h-[500px] border border-gray-300">
+        <section className="w-full lg:w-2/3 bg-gray-50 p-4 sm:p-6 rounded-lg shadow-md flex flex-col min-h-[500px] border border-gray-300">
           <h2 className="text-2xl font-semibold mb-5 text-gray-900">
             Vídeos {folderSelecionada ? ` - ${folderSelecionada.nome}` : ""}
             <span className="text-blue-600 text-sm ml-2">(SSH)</span>
@@ -1074,12 +1045,12 @@ export default function GerenciarVideos() {
           <button
             onClick={uploadVideos}
             disabled={!uploadFiles || uploadFiles.length === 0 || uploading || !folderSelecionada}
-            className="bg-blue-600 text-white px-5 py-3 rounded hover:bg-blue-700 disabled:opacity-50 transition-colors duration-200"
+            className="w-full sm:w-auto bg-blue-600 text-white px-5 py-3 rounded hover:bg-blue-700 disabled:opacity-50 transition-colors duration-200"
           >
             {uploading ? "Enviando..." : "Enviar"}
           </button>
 
-          <div className="mt-8 flex-grow overflow-auto max-h-[450px]">
+          <div className="mt-8 flex-grow overflow-auto max-h-[400px] sm:max-h-[450px]">
             {loadingSSH && (
               <div className="flex items-center justify-center py-8">
                 <RefreshCw className="h-6 w-6 animate-spin text-blue-600 mr-2" />
@@ -1099,7 +1070,7 @@ export default function GerenciarVideos() {
                       {sshVideos.length} vídeo(s) encontrado(s) no servidor
                     </p>
                   </div>
-                  <div className="text-right">
+                  <div className="text-right hidden sm:block">
                     {folderUsage && (
                       <div className="text-xs text-blue-700">
                         <div>Usado: {formatarTamanho(folderUsage.used * 1024 * 1024)}</div>
@@ -1111,21 +1082,22 @@ export default function GerenciarVideos() {
               </div>
             )}
             
-            <table className="w-full border-collapse text-left text-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[600px] border-collapse text-left text-sm">
               <thead>
                 <tr className="border-b border-gray-300">
                   <th className="py-2 px-4">Nome</th>
-                  <th className="py-2 px-4 w-28">Duração</th>
-                  <th className="py-2 px-4 w-28">Tamanho</th>
-                  <th className="py-2 px-4 w-32">Pasta</th>
-                  <th className="py-2 px-4 w-24">Assistir</th>
-                  <th className="py-2 px-4 w-40">Ações</th>
+                  <th className="py-2 px-4 w-20 sm:w-28">Duração</th>
+                  <th className="py-2 px-4 w-20 sm:w-28">Tamanho</th>
+                  <th className="py-2 px-4 w-24 sm:w-32 hidden sm:table-cell">Pasta</th>
+                  <th className="py-2 px-4 w-16 sm:w-24">Assistir</th>
+                  <th className="py-2 px-4 w-32 sm:w-40">Ações</th>
                 </tr>
               </thead>
               <tbody>
                 {sshVideos.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-6 text-center text-gray-500">
+                    <td colSpan={6} className="py-6 text-center text-gray-500 text-xs sm:text-sm">
                       {loadingSSH ? 'Carregando...' : 'Nenhum vídeo encontrado no servidor'}
                     </td>
                   </tr>
@@ -1135,14 +1107,14 @@ export default function GerenciarVideos() {
                       key={video.id}
                       className="border-b border-gray-200 hover:bg-blue-50"
                     >
-                      <td className="py-2 px-4 truncate max-w-xs">
+                      <td className="py-2 px-2 sm:px-4 truncate max-w-[120px] sm:max-w-xs">
                         {editingVideo?.id === video.id ? (
                           <div className="flex items-center space-x-2">
                             <input
                               type="text"
                               value={editingVideo.nome}
                               onChange={(e) => setEditingVideo(prev => prev ? {...prev, nome: e.target.value} : null)}
-                              className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
+                              className="flex-1 px-2 py-1 border border-gray-300 rounded text-xs sm:text-sm"
                               onKeyDown={(e) => {
                                 if (e.key === 'Enter') saveVideoEdit();
                                 if (e.key === 'Escape') cancelEdit();
@@ -1154,32 +1126,34 @@ export default function GerenciarVideos() {
                               className="text-green-600 hover:text-green-800"
                               title="Salvar"
                             >
-                              <Save size={16} />
+                              <Save size={14} />
                             </button>
                             <button
                               onClick={cancelEdit}
                               className="text-red-600 hover:text-red-800"
                               title="Cancelar"
                             >
-                              <X size={16} />
+                              <X size={14} />
                             </button>
                           </div>
                         ) : (
-                          video.nome
-                        )}
+                          <div className="flex items-center justify-between">
+                            <span className="truncate">{video.nome}</span>
                             {/* Indicador de integridade */}
-                            <div className="flex items-center space-x-1">
+                            <div className="flex items-center space-x-1 ml-2">
                               {video.size > 0 ? (
                                 <div className="w-2 h-2 bg-green-500 rounded-full" title="Arquivo válido" />
                               ) : (
                                 <div className="w-2 h-2 bg-red-500 rounded-full" title="Arquivo pode estar corrompido" />
                               )}
                             </div>
+                          </div>
+                        )}
                       </td>
-                      <td className="py-2 px-4">{video.duration ? formatarDuracao(video.duration) : "--"}</td>
-                      <td className="py-2 px-4">{video.size ? formatarTamanho(video.size) : "--"}</td>
-                      <td className="py-2 px-4 text-xs text-gray-500">{video.folder}</td>
-                      <td className="py-2 px-4 text-blue-600 text-center">
+                      <td className="py-2 px-2 sm:px-4 text-xs sm:text-sm">{video.duration ? formatarDuracao(video.duration) : "--"}</td>
+                      <td className="py-2 px-2 sm:px-4 text-xs sm:text-sm">{video.size ? formatarTamanho(video.size) : "--"}</td>
+                      <td className="py-2 px-2 sm:px-4 text-xs text-gray-500 hidden sm:table-cell">{video.folder}</td>
+                      <td className="py-2 px-2 sm:px-4 text-blue-600 text-center">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -1194,11 +1168,11 @@ export default function GerenciarVideos() {
                           title="Assistir vídeo (via SSH)"
                           className="hover:text-blue-800 transition-colors duration-200"
                         >
-                          <Play size={20} />
+                          <Play size={16} />
                         </button>
                       </td>
-                      <td className="py-2 px-4 text-center">
-                        <div className="flex items-center justify-center space-x-1">
+                      <td className="py-2 px-2 sm:px-4 text-center">
+                        <div className="flex items-center justify-center space-x-1 flex-wrap">
                           {/* Botão para abrir em nova aba */}
                           <button
                             onClick={(e) => {
@@ -1208,7 +1182,7 @@ export default function GerenciarVideos() {
                             title="Abrir vídeo em nova aba (Wowza direto)"
                             className="text-green-600 hover:text-green-800 transition-colors duration-200"
                           >
-                            <Eye size={14} />
+                            <Eye size={12} />
                           </button>
                           
                           {/* Botão para verificar integridade */}
@@ -1220,7 +1194,7 @@ export default function GerenciarVideos() {
                             title="Verificar integridade do vídeo"
                             className="text-purple-600 hover:text-purple-800 transition-colors duration-200"
                           >
-                            <Activity size={14} />
+                            <Activity size={12} />
                           </button>
                           
                           <button
@@ -1232,7 +1206,7 @@ export default function GerenciarVideos() {
                             className="text-blue-600 hover:text-blue-800 transition-colors duration-200"
                             disabled={editingVideo?.id === video.id}
                           >
-                            <Edit2 size={14} />
+                            <Edit2 size={12} />
                           </button>
                           <button
                             onClick={(e) => {
@@ -1242,7 +1216,7 @@ export default function GerenciarVideos() {
                             title="Excluir vídeo do servidor"
                             className="text-red-600 hover:text-red-800 transition-colors duration-200"
                           >
-                            <Trash2 size={14} />
+                            <Trash2 size={12} />
                           </button>
                         </div>
                       </td>
@@ -1250,7 +1224,8 @@ export default function GerenciarVideos() {
                   ))
                 )}
               </tbody>
-            </table>
+              </table>
+            </div>
           </div>
         </section>
       </div>

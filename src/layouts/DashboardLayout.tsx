@@ -233,6 +233,7 @@ const DashboardLayout: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
+              className="w-full max-w-full overflow-x-hidden"
             >
               <Outlet />
             </motion.div>
